@@ -1,4 +1,7 @@
 # dpapi-projects
+## Project List
+- [DPAPIDataExample](https://github.com/toneillcodes/dpapi-projects/tree/main/DPAPIDataExample): C# project demonstrating the use of the ProtectedData class to protect/unprotect data stored in file
+
 ## What is DPAPI?
 .NET provides access to the data protection API (DPAPI), which allows you to encrypt data using information from 
 the current user account or computer. When you use the DPAPI, you alleviate the difficult problem of explicitly 
