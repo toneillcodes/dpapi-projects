@@ -5,7 +5,7 @@ if($user_sid) {
 	$master_key_directory = $protect_directory + "\" + $user_sid
 	if($master_key_directory) {
 		echo "Master Key Directory: " $master_key_directory
-		$master_key_list = Get-ChildItem -Path $master_key_directory -Directory | select-object -expandproperty Name
+		$master_key_list = Get-ChildItem -Attributes Hidden -Path $master_key_directory -Directory | select-object -expandproperty Name
 		if($master_key_list) {
 			echo "Master Key List: " $master_key_list
 		} else {
