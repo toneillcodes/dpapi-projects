@@ -1,5 +1,7 @@
 using System;
 using System.Security.Cryptography;
+using System.Security.Permissions;
+using Microsoft.Win32;
 
 public class DPAPIDataExample {
     static byte[] entropyBits = {1,2,3,4,5};      //  "That's the kind of thing an idiot would have on his luggage"
@@ -7,6 +9,8 @@ public class DPAPIDataExample {
     static string encryptedFilePath = @"C:\dev\training\dpapi\tmp\encrypted.txt";
     static string encryptedOutputFilePath = @"C:\dev\training\dpapi\tmp\encrypted.out";
     static string unprotectedOutputFilePath = @"C:\dev\training\dpapi\tmp\decrypted.out";
+    static string registryKeyPath ="Software\\Sysinternals\\DPAPIPoC";
+    static string registryValueName = "TopSecretBlob";
 
     public static void Main(string[] args){
         byte[] mySecretBytes;
@@ -77,6 +81,8 @@ public class DPAPIDataExample {
             Console.WriteLine("[*] Encrypted output file written.");
         }
 
+        Console.WriteLine("[*] Starting unprotection routine");
+
         //	Check for encrypted input file, read contents, unprotect contents and write bytes to unprotected output file
         if (File.Exists(encryptedFilePath))
         {
@@ -125,6 +131,22 @@ public class DPAPIDataExample {
             Console.WriteLine("[*] No encrypted input found, skipping decryption");
         }
 
+        Console.WriteLine("[*] Starting registry storage routine");
+
+        string encodedSecret = Convert.ToBase64String(protectedSecret);
+        //Console.WriteLine("Base64 encoded secret bytes: {0}", encodedSecret);
+
+        //RegistryKey rk = Registry.LocalMachine;
+        RegistryKey rk = Registry.CurrentUser;
+
+        // create a subkey named DPAPIPoC under HKEY_CURRENT_USER\Software\Sysinternals\DPAPIPoC.
+        RegistryKey rkDPAPIPoC = rk.CreateSubKey(registryKeyPath);
+        
+        // create data for the TopSecretBlob subkey.
+        rkDPAPIPoC.SetValue(registryValueName, encodedSecret);
+
+        Console.WriteLine("[*] Secret stored under registry key (HKEY_CURRENT_USER): {0}", registryKeyPath);
+
         Console.WriteLine("[*] Done.");
     }
 	
@@ -133,7 +155,8 @@ public class DPAPIDataExample {
     {
         foreach(Byte i in myArr)
         {
-            Console.Write( "\t{0}", i );
+            //Console.Write( "\t{0}", i );
+            Console.Write("0x{0} ",i.ToString("X2"));
         }
         Console.WriteLine();
     }
