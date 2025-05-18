@@ -12,3 +12,4 @@ Check out my posts on medium:
 ## Project List
 - [DPAPIDataExample](https://github.com/toneillcodes/dpapi-projects/tree/main/DPAPIDataExample): C# project demonstrating the use of the ProtectedData class to protect/unprotect data stored in file
 - [DPAPIBlobHunter](https://github.com/toneillcodes/dpapi-projects/tree/main/DPAPIBlobHunter): C# project demonstrating methods of scanning the filesystem and registry for DPAPI blobs
+- [DPAPIBlobReader](https://github.com/toneillcodes/dpapi-projects/tree/main/DPAPIBlobReader): C# project demonstrating the processing of a DPAPI protected blob
