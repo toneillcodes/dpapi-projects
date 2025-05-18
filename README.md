@@ -1,4 +1,6 @@
 # dpapi-projects
+This is a collection of research materials and offensive tools for the Windows DPAPI architecture.  
+None of this (so far) is new, but the goal is to deepen my own understanding and share whatever I can along the way.
 ## Project List
 - [DPAPIDataExample](https://github.com/toneillcodes/dpapi-projects/tree/main/DPAPIDataExample): C# project demonstrating the use of the ProtectedData class to protect/unprotect data stored in file
 - [DPAPIBlobHunter](https://github.com/toneillcodes/dpapi-projects/tree/main/DPAPIBlobHunter): C# project demonstrating methods of scanning the filesystem and registry for DPAPI blobs
