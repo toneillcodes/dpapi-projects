@@ -4,6 +4,9 @@
 - [DPAPIBlobHunter](https://github.com/toneillcodes/dpapi-projects/tree/main/DPAPIBlobHunter): C# project demonstrating methods of scanning the filesystem and registry for DPAPI blobs
 
 ## What is DPAPI?
+- [Windows DPAPI Fundamentals](https://medium.com/@toneillcodes/windows-dpapi-fundamentals-69af5169ffe8)
+
+## DPAPI in .NET
 .NET provides access to the data protection API (DPAPI), which allows you to encrypt data using information from 
 the current user account or computer. When you use the DPAPI, you alleviate the difficult problem of explicitly 
 generating and storing a cryptographic key.  
