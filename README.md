@@ -4,6 +4,8 @@
 - [DPAPIBlobHunter](https://github.com/toneillcodes/dpapi-projects/tree/main/DPAPIBlobHunter): C# project demonstrating methods of scanning the filesystem and registry for DPAPI blobs
 
 ## What is DPAPI?
+Data Protection Application Programming Interface is a set of APIs used to protect and unprotect secrets on a Windows system.  
+This functionality allows developers to obfuscate secure application data without implementing cryptography algorithms.
 - [Windows DPAPI Fundamentals](https://medium.com/@toneillcodes/windows-dpapi-fundamentals-69af5169ffe8)
 
 ## DPAPI in .NET
