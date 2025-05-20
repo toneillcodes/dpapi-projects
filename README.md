@@ -8,6 +8,7 @@ This functionality allows developers to obfuscate secure application data withou
 Check out my posts on medium:
 -  [Windows DPAPI Fundamentals](https://medium.com/@toneillcodes/windows-dpapi-fundamentals-69af5169ffe8)
 -  [DPAPI Blob Hunting](https://medium.com/@toneillcodes/dpapi-blob-hunting-967d2baead6a)
+-  [Reading DPAPI Protected Blobs](https://medium.com/@toneillcodes/decoding-dpapi-blobs-1ed9b4832cf6)
 
 ## Project List
 - [DPAPIDataExample](https://github.com/toneillcodes/dpapi-projects/tree/main/DPAPIDataExample): C# project demonstrating the use of the ProtectedData class to protect/unprotect data stored in file
