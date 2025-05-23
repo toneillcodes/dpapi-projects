@@ -1,14 +1,26 @@
-﻿public static class DPAPIBlobReader
+public static class DPAPIBlobReader
 {
     static byte[] magicBytes = { 0x01, 0x00, 0x00, 0x00, 0xD0, 0x8C, 0x9D, 0xDF, 0x01, 0x15, 0xD1, 0x11, 0x8C, 0x7A, 0x00, 0xC0, 0x4F, 0xC2, 0x97, 0xEB };
-    static string filename = @"C:\dev\training\dpapi\tmp\encrypted.out";
-    
+    //static string filename = @"C:\dev\training\dpapi\tmp\encrypted.out";
+
     static bool debug = false;
     static bool logging = false;
     static bool findMasterKey = false;
-    static string masterKeyPath = @"C:\Users\UPDATEME\AppData\Roaming\Microsoft\Protect";
-    public static void Main(string[] args)
+    static string masterKeyPath = @"C:\Users\$USER\AppData\Roaming\Microsoft\Protect";
+    public static int Main(string[] args)
     {
+        string filename = "";
+        if (args.Length >= 1)
+        {
+            filename = args[0];
+        }
+        else
+        {
+            Console.WriteLine("[ERROR] Filename required!");
+            Console.WriteLine("Usage: DPAPIBlobReader <filename>");
+            return -1;
+        }
+
         // FileStream byte processing based on the FileStream.Read Method reference
         try
         {
@@ -40,13 +52,14 @@
                         numBytesRead += n;
                         numBytesToRead -= n;
                     }
+                    byte[] fileHash = System.Security.Cryptography.SHA256.HashData(inputBytes);
 
                     //  we want to start processing from the beginning of our blog magic bytes, which may not be the beginning of the file
                     int blobStart = IndexOfBytes(inputBytes, magicBytes);
                     if (blobStart < 0)
                     {
                         Console.WriteLine("[!] ERROR: Unable to locate the blob start using magic bytes, exiting.");
-                        Environment.Exit(1);
+                        return -1;
                     }
 
                     //  DPAPI blob structure, based on mimikatz DPAPI structure (https://github.com/gentilkiwi/mimikatz/blob/master/modules/kull_m_dpapi.h#L24)
@@ -171,6 +184,8 @@
                     //  output blob summary
                     Console.WriteLine("[*] Blob Summary");
                     Console.WriteLine("[>] Filename: {0}", filename);
+                    Console.Write("[>] File hash (SHA-256): ");
+                    PrintValues(fileHash, true);
                     Console.WriteLine("[>] Blob start position: {0}.", blobStart);
                     Console.WriteLine("[>] Final blob pointer position: {0}", ptrBlob);
                     Console.WriteLine("[>] Remaining bytes: {0}", remainingBytes);
@@ -179,52 +194,59 @@
                     PrintValues(dwVersion, true);
                     Console.Write("guidProvider:\t\t\t");
                     PrintValues(guidProvider, false);
-                    Console.WriteLine(":{{{0}}}", dpapiGuid.ToString());
+                    Console.WriteLine(":({0})", dpapiGuid.ToString());
                     Console.Write("dwMasterKeyVersion:\t\t");
                     PrintValues(dwMasterKeyVersion, true);
                     Console.Write("guidMasterKey:\t\t\t");
                     PrintValues(guidMasterKey, false);
-                    Console.WriteLine(":{{{0}}}", masterKeyGuid.ToString());
+                    Console.WriteLine(":({0})", masterKeyGuid.ToString());
                     Console.Write("dwFlags:\t\t\t");
                     PrintValues(dwFlags, true);
                     Console.Write("dwDescriptionLen:\t\t");
-                    PrintValues(dwDescriptionLen, true);
-                    Console.WriteLine("descriptionLength:\t\t{0}", descriptionLength);
+                    PrintValues(dwDescriptionLen, false);
+                    Console.WriteLine(":({0})", descriptionLength);
                     Console.Write("szDescription:\t\t\t");
-                    PrintValues(szDescription, true);
+                    if (EmptyArray(szDescription)) {     //  is the description array all zeroes?
+                        PrintValues(szDescription, true);       //  output as-is
+                    }
+                    else {
+                        PrintValues(szDescription, false);
+                        string reableDescription = System.Text.Encoding.UTF8.GetString(szDescription);
+                        Console.WriteLine("({0})", reableDescription);
+                    }
                     Console.Write("algCrypt:\t\t\t");
                     PrintValues(algCrypt, true);
                     Console.Write("dwAlgCryptLen:\t\t\t");
-                    PrintValues(dwAlgCryptLen, true);
-                    Console.Write("algCryptLen:\t\t\t{0}\n", algCryptLen);
+                    PrintValues(dwAlgCryptLen, false);
+                    Console.WriteLine(":({0})", algCryptLen);
                     Console.Write("dwSaltLen:\t\t\t");
-                    PrintValues(dwSaltLen, true);
-                    Console.Write("saltLen:\t\t\t{0}\n", saltLen);
+                    PrintValues(dwSaltLen, false);
+                    Console.WriteLine(":({0})", saltLen);
                     Console.Write("pbSalt:\t\t\t\t");
                     PrintValues(pbSalt, true);
                     Console.Write("dwHmacKeyLen:\t\t\t");
-                    PrintValues(dwHmacKeyLen, true);
-                    Console.Write("hmacKeyLen:\t\t\t{0}\n", hmacKeyLen);
+                    PrintValues(dwHmacKeyLen, false);
+                    Console.WriteLine(":({0})", hmacKeyLen);
                     Console.Write("pbHmackKey:\t\t\t");
                     PrintValues(pbHmackKey, true);
                     Console.Write("algHash:\t\t\t");
                     PrintValues(algHash, true);
                     Console.Write("dwAlgHashLen:\t\t\t");
-                    PrintValues(dwAlgHashLen, true);
-                    Console.Write("algHashLen:\t\t\t{0}\n", algHashLen);
+                    PrintValues(dwAlgHashLen, false);
+                    Console.WriteLine(":({0})", algHashLen);
                     Console.Write("dwHmac2KeyLen:\t\t\t");
-                    PrintValues(dwHmac2KeyLen, true);
-                    Console.Write("hmac2KeyLen:\t\t\t{0}\n", hmac2KeyLen);
+                    PrintValues(dwHmac2KeyLen, false);
+                    Console.WriteLine(":({0})", hmac2KeyLen);
                     Console.Write("pbHmack2Key:\t\t\t");
                     PrintValues(pbHmack2Key, true);
                     Console.Write("dwDataLen:\t\t\t");
-                    PrintValues(dwDataLen, true);
-                    Console.Write("dataLen:\t\t\t{0}\n", dataLen);
+                    PrintValues(dwDataLen, false);
+                    Console.WriteLine(":({0})", dataLen);
                     Console.Write("pbData:\t\t\t\t");
                     PrintValues(pbData, true);
                     Console.Write("dwSignLen:\t\t\t");
-                    PrintValues(dwSignLen, true);
-                    Console.Write("signLen:\t\t\t{0}\n", signLen);
+                    PrintValues(dwSignLen, false);
+                    Console.WriteLine(":({0})", signLen);
                     Console.Write("pbSign:\t\t\t\t");
                     PrintValues(pbSign, true);
 
@@ -237,8 +259,10 @@
             if (debug)
             {
                 Console.WriteLine("ERROR: Exception: {0}", e.Message);
+                return -1;
             }
         }
+        return 0;
     }
 
     // Adapted from Microsoft's DPAPI examples
@@ -250,7 +274,7 @@
             //  added .ToString("X2") to format the byte values in hex
             //Console.Write( "\t{0}", i );
             //Console.Write("0x{0}", i.ToString("X2"));
-            Console.Write("{0}", i.ToString("X2"));
+            Console.Write("{0}", i.ToString("x2"));     //  lowercase seems better for readability
         }
         if (addNewline)
             Console.WriteLine();
@@ -296,5 +320,16 @@
             }
         }
         return -1; // pattern not found
+    }
+    public static bool EmptyArray(byte[] source)
+    {
+        foreach (byte i in source)
+        {
+            if (i != 0)
+            {
+                return false;
+            }
+        }
+        return true;
     }
 }
