@@ -1,25 +1,76 @@
-﻿public static class DPAPIMasterKeyReader
+public static class DPAPIMasterKeyReader
 {
     static bool debugMode = false;
     static bool verboseMode = false;
-
+    static bool outputBytes = false;
+    static bool outputStdout = false;
+    static bool outputFile = false;
+    static string outputFilename = "";
+    
     public static int Main(string[] args)
     {
+        bool fileProvided = false;
+
         Console.WriteLine("[*] Running DPAPIMasterKeyReader.");
 
         string filename = "";
         if (args.Length >= 1)
         {
-            filename = args[0];
-            ParseMasterKey(filename);
+            foreach (var arg in args)
+            {
+                if (arg.StartsWith("/file:"))
+                {
+                    //  parse the option value
+                    int separatorIndex = arg.IndexOf(':');
+                    if (separatorIndex > -1)
+                    {
+                        string fileCmd = arg.Substring(0, separatorIndex).Trim();
+                        filename = arg.Substring(separatorIndex + 1).Trim();
+                        if (filename.Length <= 0)
+                        {
+                            Console.WriteLine("[ERROR] Filename required!");
+                            Console.WriteLine("Usage: DPAPIMasterKeyReader /file:<filename> /stdout /outfile:<filename>");
+                            return -1;
+                        }
+                        fileProvided = true;
+                    }
+                }
+                else if (arg.StartsWith("/outfile:"))
+                {
+                    outputFile = true;
+                    //  parse the option value
+                    int separatorIndex = arg.IndexOf(':');
+                    if (separatorIndex > -1)
+                    {
+                        string fileCmd = arg.Substring(0, separatorIndex).Trim();
+                        outputFilename = arg.Substring(separatorIndex + 1).Trim();
+                        if (outputFilename.Length <= 0)
+                        {
+                            Console.WriteLine("[ERROR] Output parameter provided but filename is missing, skipping file ouput.");
+                            outputFile = false;
+                        }
+                    }
+                }
+                else if (arg.Equals("/stdout"))
+                {
+                    outputStdout = true;
+                }
+            }
+            if (!fileProvided)
+            {
+                Console.WriteLine("[ERROR] Filename required!");
+                Console.WriteLine("Usage: DPAPIMasterKeyReader /file:<filename> /stdout /outfile:<filename>");
+                return -1;
+            }
         }
         else
         {
             Console.WriteLine("[ERROR] Filename required!");
-            Console.WriteLine("Usage: DPAPIMasterKeyReader <filename>");
+            Console.WriteLine("Usage: DPAPIMasterKeyReader /file:<filename> /stdout /outfile:<filename>");
             return -1;
         }
 
+        ParseMasterKey(filename);
         //EnumerateMasterKeys(masterKeySearchPath);
 
         Console.WriteLine("[*] Done.");
@@ -160,14 +211,14 @@
                         Guid mkGuid = new Guid(masterKeyGuid);
                         //  output preferred key guid value
                         Console.Write("Preferred Master Key GUID:\t\t\t");
-                        PrintValues(masterKeyGuid, false);
+                        PrintValues(masterKeyGuid, false, true);
                         Console.WriteLine($":({mkGuid})");
                     }
                     else
                     {
                         if (verboseMode)
                         {
-                            PrintValues(inputBytes, true);
+                            PrintValues(inputBytes, true, true);
                         }
 
                         //  Generate hashes of input bytes
@@ -176,11 +227,11 @@
                         byte[] sha256FileHash = System.Security.Cryptography.SHA256.HashData(inputBytes);
 
                         Console.Write("[>] md5 Input Hash:\t\t");
-                        PrintValues(md5FileHash, true);
+                        PrintValues(md5FileHash, true, true);
                         Console.Write("[>] SHA-1 Input Hash:\t\t");
-                        PrintValues(sha1FileHash, true);
+                        PrintValues(sha1FileHash, true, true);
                         Console.Write("[>] SHA-256 Input Hash:\t\t");
-                        PrintValues(sha256FileHash, true);
+                        PrintValues(sha256FileHash, true, true);
 
                         //  file structure https://github.com/gentilkiwi/mimikatz/blob/master/modules/kull_m_dpapi.h#L80 (_KULL_M_DPAPI_MASTERKEYS)
                         byte[] dwVersion = new byte[4];
@@ -232,36 +283,36 @@
                         Array.Copy(inputBytes, ptrFile, dwVersion, 0, dwVersion.Length);
                         ptrFile += dwVersion.Length;
                         Console.Write("dwVersion:\t\t\t");
-                        PrintValues(dwVersion, true);
+                        PrintValues(dwVersion, true, true);
 
                         Array.Copy(inputBytes, ptrFile, dwField1, 0, dwField1.Length);
                         ptrFile += dwField1.Length;
                         Console.Write("dwField1:\t\t\t");
-                        PrintValues(dwField1, true);
+                        PrintValues(dwField1, true, true);
 
                         Array.Copy(inputBytes, ptrFile, dwField2, 0, dwField2.Length);
                         ptrFile += dwField2.Length;
                         Console.Write("dwField2:\t\t\t");
-                        PrintValues(dwField2, true);
+                        PrintValues(dwField2, true, true);
 
                         Array.Copy(inputBytes, ptrFile, masterKeyGuid, 0, masterKeyGuid.Length);
                         Console.Write("masterKeyGuid:\t\t\t");
-                        PrintValues(masterKeyGuid, true);
+                        PrintValues(masterKeyGuid, true, true);
                         ptrFile += masterKeyGuid.Length;
 
                         Array.Copy(inputBytes, ptrFile, dwField3, 0, dwField3.Length);
                         Console.Write("dwField3:\t\t\t");
-                        PrintValues(dwField3, true);
+                        PrintValues(dwField3, true, true);
                         ptrFile += dwField3.Length;
 
                         Array.Copy(inputBytes, ptrFile, dwField4, 0, dwField4.Length);
                         Console.Write("dwField4\t\t\t");
-                        PrintValues(dwField4, true);
+                        PrintValues(dwField4, true, true);
                         ptrFile += dwField4.Length;
 
                         Array.Copy(inputBytes, ptrFile, policy, 0, policy.Length);
                         Console.Write("policy:\t\t\t\t");
-                        PrintValues(policy, true);
+                        PrintValues(policy, true, true);
                         ptrFile += policy.Length;
 
                         Console.WriteLine("[ Length Fields ]");
@@ -270,28 +321,28 @@
                         masterKeyLength = ByteArrayToUint(masterKeyLen);
                         ptrFile += masterKeyLen.Length;
                         Console.Write("masterKeyLen:\t\t\t");
-                        PrintValues(masterKeyLen, false);
+                        PrintValues(masterKeyLen, false, true);
                         Console.WriteLine($":({masterKeyLength})");
 
                         Array.Copy(inputBytes, ptrFile, backupKeyLen, 0, backupKeyLen.Length);
                         backupKeyLength = ByteArrayToUint(backupKeyLen);
                         ptrFile += backupKeyLen.Length;
                         Console.Write("backupKeyLen:\t\t\t");
-                        PrintValues(backupKeyLen, false);
+                        PrintValues(backupKeyLen, false, true);
                         Console.WriteLine($":({backupKeyLength})");
 
                         Array.Copy(inputBytes, ptrFile, credHistLen, 0, credHistLen.Length);
                         credHistLength = ByteArrayToUint(credHistLen);
                         ptrFile += credHistLen.Length;
                         Console.Write("credHistLen:\t\t\t");
-                        PrintValues(credHistLen, false);
+                        PrintValues(credHistLen, false, true);
                         Console.WriteLine($":({credHistLength})");
 
                         Array.Copy(inputBytes, ptrFile, domainKeyLen, 0, domainKeyLen.Length);
                         domainKeyLength = ByteArrayToUint(domainKeyLen);
                         ptrFile += domainKeyLen.Length;
                         Console.Write("domainKeyLen:\t\t\t");
-                        PrintValues(domainKeyLen, false);
+                        PrintValues(domainKeyLen, false, true);
                         Console.WriteLine($":({domainKeyLength})");
 
                         //  master key parsing
@@ -299,27 +350,27 @@
 
                         Array.Copy(inputBytes, ptrFile, mkVersion, 0, mkVersion.Length);
                         Console.Write("mkVersion:\t\t\t");
-                        PrintValues(mkVersion, true);
+                        PrintValues(mkVersion, true, true);
                         ptrFile += mkVersion.Length;
 
                         Array.Copy(inputBytes, ptrFile, mkSalt, 0, mkSalt.Length);
                         Console.Write("mkSalt:\t\t\t\t");
-                        PrintValues(mkSalt, true);
+                        PrintValues(mkSalt, true, true);
                         ptrFile += mkSalt.Length;
 
                         Array.Copy(inputBytes, ptrFile, mkPBKDF2IterationCount, 0, mkPBKDF2IterationCount.Length);
                         Console.Write("mkPBKDF2IterationCount:\t\t");
-                        PrintValues(mkPBKDF2IterationCount, true);
+                        PrintValues(mkPBKDF2IterationCount, true, true);
                         ptrFile += mkPBKDF2IterationCount.Length;
 
                         Array.Copy(inputBytes, ptrFile, mkHMACAlgId, 0, mkHMACAlgId.Length);
                         Console.Write("mkHMACAlgId:\t\t\t");
-                        PrintValues(mkHMACAlgId, true);
+                        PrintValues(mkHMACAlgId, true, true);
                         ptrFile += mkHMACAlgId.Length;
 
                         Array.Copy(inputBytes, ptrFile, mkCryptAlgId, 0, mkCryptAlgId.Length);
                         Console.Write("mkCryptAlgId:\t\t\t");
-                        PrintValues(mkCryptAlgId, true);
+                        PrintValues(mkCryptAlgId, true, true);
                         ptrFile += mkCryptAlgId.Length;
 
                         //  master key data length calculation
@@ -329,7 +380,7 @@
                         byte[] masterKeyData = new byte[masterKeyDataLength];
                         Array.Copy(inputBytes, ptrFile, masterKeyData, 0, masterKeyData.Length);
                         Console.Write("masterKeyData:\t\t\t");
-                        PrintValues(masterKeyData, true);
+                        PrintValues(masterKeyData, true, true);
                         ptrFile += (int)masterKeyDataLength;
 
                         //  backup key processing
@@ -337,27 +388,27 @@
 
                         Array.Copy(inputBytes, ptrFile, bkVersion, 0, bkVersion.Length);
                         Console.Write("bkVersion:\t\t\t");
-                        PrintValues(bkVersion, true);
+                        PrintValues(bkVersion, true, true);
                         ptrFile += bkVersion.Length;
 
                         Array.Copy(inputBytes, ptrFile, bkSalt, 0, bkSalt.Length);
                         Console.Write("bkSalt:\t\t\t\t");
-                        PrintValues(bkSalt, true);
+                        PrintValues(bkSalt, true, true);
                         ptrFile += bkSalt.Length;
 
                         Array.Copy(inputBytes, ptrFile, bkPBKDF2IterationCount2, 0, bkPBKDF2IterationCount2.Length);
                         Console.Write("bkPBKDF2IterationCount2:\t");
-                        PrintValues(bkPBKDF2IterationCount2, true);
+                        PrintValues(bkPBKDF2IterationCount2, true, true);
                         ptrFile += bkPBKDF2IterationCount2.Length;
 
                         Array.Copy(inputBytes, ptrFile, bkHMACAlgId, 0, bkHMACAlgId.Length);
                         Console.Write("bkHMACAlgId2:\t\t\t");
-                        PrintValues(bkHMACAlgId, true);
+                        PrintValues(bkHMACAlgId, true, true);
                         ptrFile += bkHMACAlgId.Length;
 
                         Array.Copy(inputBytes, ptrFile, bkCryptAlgId, 0, bkCryptAlgId.Length);
                         Console.Write("bkCryptAlgId2:\t\t\t");
-                        PrintValues(bkCryptAlgId, true);
+                        PrintValues(bkCryptAlgId, true, true);
                         ptrFile += bkCryptAlgId.Length;
 
                         //  backup key data length calculation
@@ -367,7 +418,7 @@
                         byte[] backupKeyData = new byte[backupKeyDataLength];
                         Array.Copy(inputBytes, ptrFile, backupKeyData, 0, backupKeyDataLength);
                         Console.Write("backupKeyData:\t\t\t");
-                        PrintValues(backupKeyData, true);
+                        PrintValues(backupKeyData, true, true);
                         ptrFile += (int)backupKeyDataLength;
 
                         //  credential history parsing
@@ -380,12 +431,12 @@
                             byte[] credHistGuid = new byte[16];
                             Array.Copy(inputBytes, ptrFile, credHistVerion, 0, credHistVerion.Length);
                             Console.Write("credHistVerion:\t\t\t");
-                            PrintValues(credHistVerion, true);
+                            PrintValues(credHistVerion, true, true);
                             ptrFile += credHistVerion.Length;
 
                             Array.Copy(inputBytes, ptrFile, credHistGuid, 0, credHistGuid.Length);
                             Console.Write("credHistGuid:\t\t\t");
-                            PrintValues(credHistGuid, true);
+                            PrintValues(credHistGuid, true, true);
                             ptrFile += credHistGuid.Length;
                         }
 
@@ -400,28 +451,28 @@
 
                             Array.Copy(inputBytes, ptrFile, dkVersion, 0, dkVersion.Length);
                             Console.Write("dkVersion:\t\t\t");
-                            PrintValues(dkVersion, true);
+                            PrintValues(dkVersion, true, true);
                             ptrFile += dkVersion.Length;
 
                             Array.Copy(inputBytes, ptrFile, dkSecretLen, 0, dkSecretLen.Length);
                             ptrFile += dkSecretLen.Length;
                             uint dkSecretLength = ByteArrayToUint(dkSecretLen);
                             Console.Write("dkSecretLen:\t\t\t");
-                            PrintValues(dkSecretLen, false);
+                            PrintValues(dkSecretLen, false, true);
                             Console.WriteLine($":({dkSecretLength})");
 
                             Array.Copy(inputBytes, ptrFile, dkAccesCheckLen, 0, dkAccesCheckLen.Length);
                             ptrFile += dkAccesCheckLen.Length;
                             uint dkAccessCheckLength = ByteArrayToUint(dkAccesCheckLen);
                             Console.Write("dkAccesCheckLen:\t\t");
-                            PrintValues(dkAccesCheckLen, false);
+                            PrintValues(dkAccesCheckLen, false, true);
                             Console.WriteLine($":({dkAccessCheckLength})");
 
                             //  wait, is there a guid in here? how would the bytes still line up?
                             byte[] dkMasterKeyGuid = new byte[16];
                             Array.Copy(inputBytes, ptrFile, dkMasterKeyGuid, 0, dkMasterKeyGuid.Length);
                             Console.Write("dkMasterKeyGuid:\t\t");
-                            PrintValues(dkMasterKeyGuid, true);
+                            PrintValues(dkMasterKeyGuid, true, true);
                             ptrFile += dkMasterKeyGuid.Length;
 
                             // domain key data length calculation
@@ -431,21 +482,48 @@
                             byte[] domainBackupKeyData = new byte[domainKeyDataLength];
                             Array.Copy(inputBytes, ptrFile, domainBackupKeyData, 0, domainKeyDataLength);
                             Console.Write("domainBackupKeyData:\t\t");
-                            PrintValues(domainBackupKeyData, true);
+                            PrintValues(domainBackupKeyData, true, true);
                             ptrFile += (int)domainKeyDataLength;
 
                             byte[] accessCheckData = new byte[dkAccessCheckLength];
                             Array.Copy(inputBytes, ptrFile, accessCheckData, 0, dkAccessCheckLength);
                             Console.Write("accessCheckData:\t\t");
-                            PrintValues(accessCheckData, true);
+                            PrintValues(accessCheckData, true, true);
                             ptrFile += (int)dkAccessCheckLength;
-                        }
-                        if (debugMode)
-                        {
-                            int remainingBytes = numBytesRead - ptrFile;    //  anything left in the file?
-                            Console.WriteLine("[*] DEBUG File Processing Data");
-                            Console.WriteLine("[>] File pointer ending value:{0}", ptrFile);
-                            Console.WriteLine("[>] Remaining bytes:{0}", remainingBytes);
+
+                            if (outputStdout)
+                            {
+                                Console.WriteLine("[*] Output to stdout enabled, dumping bytes:");
+                                Console.WriteLine("--------START--------");
+                                PrintValues(inputBytes, true, false);
+                                Console.WriteLine("---------EOF---------");
+                            }
+
+                            if (outputFile)
+                            {
+                                Console.WriteLine($"[*] Output to file enabled, dumping bytes to file: {outputFilename}");
+
+                                //  Remove decrypted output file
+                                if (File.Exists(outputFilename))
+                                {
+                                    File.Delete(outputFilename);
+                                }
+
+                                // Write the encrypted bytes to the encrypted output file
+                                using (FileStream outputFs = File.Create(outputFilename))
+                                {
+                                    outputFs.Write(inputBytes, 0, inputBytes.Length);
+                                    Console.WriteLine("[*] Output file written.");
+                                }
+                            }
+
+                            if (debugMode)
+                            {
+                                int remainingBytes = numBytesRead - ptrFile;    //  anything left in the file?
+                                Console.WriteLine("[*] DEBUG File Processing Data");
+                                Console.WriteLine("[>] File pointer ending value:{0}", ptrFile);
+                                Console.WriteLine("[>] Remaining bytes:{0}", remainingBytes);
+                            }
                         }
                     }
                 }
@@ -474,9 +552,11 @@
     }
 
     // Adapted from Microsoft's DPAPI examples
-    public static void PrintValues(Byte[] myArr, bool addNewline = false)
+    public static void PrintValues(Byte[] myArr, bool addNewline = false, bool hexOutput = false)
     {
-        Console.Write("0x");
+        if(hexOutput) {
+            Console.Write("0x");
+        }
         foreach (Byte i in myArr)
         {
             //  added .ToString("X2") to format the byte values in hex
