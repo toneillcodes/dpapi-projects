@@ -1,3 +1,5 @@
+using System.Security.AccessControl;
+
 public static class DPAPIBlobReader
 {
     static byte[] magicBytes = { 0x01, 0x00, 0x00, 0x00, 0xD0, 0x8C, 0x9D, 0xDF, 0x01, 0x15, 0xD1, 0x11, 0x8C, 0x7A, 0x00, 0xC0, 0x4F, 0xC2, 0x97, 0xEB };
@@ -9,15 +11,69 @@ public static class DPAPIBlobReader
     static string masterKeyPath = @"C:\Users\$USER\AppData\Roaming\Microsoft\Protect";
     public static int Main(string[] args)
     {
+        bool fileProvided = false;
+        string outputOption = "";
+        bool outputBytes = false;
+        bool outputStdout = false;
+        bool outputFile = false;
+        string fileParam = "";
+        string outputFilename = "";
+
         string filename = "";
         if (args.Length >= 1)
         {
-            filename = args[0];
+            foreach (var arg in args)
+            {
+                if (arg.StartsWith("/file:"))
+                {
+                    //  parse the option value
+                    int separatorIndex = arg.IndexOf(':');
+                    if (separatorIndex > -1)
+                    {
+                        string fileCmd = arg.Substring(0, separatorIndex).Trim();
+                        filename = arg.Substring(separatorIndex + 1).Trim();
+                        if (filename.Length <= 0)
+                        {
+                            Console.WriteLine("[ERROR] Filename required!");
+                            Console.WriteLine("Usage: DPAPIBlobReader /file:<filename> /stdout /outfile:<filename>");
+                            return -1;                             
+                        }
+                        Console.WriteLine($"Processing filename: {filename}");
+                        fileProvided = true;
+                    }
+                }
+                else if (arg.StartsWith("/outfile:"))
+                {
+                    outputFile = true;
+                    //  parse the option value
+                    int separatorIndex = arg.IndexOf(':');
+                    if (separatorIndex > -1)
+                    {
+                        string fileCmd = arg.Substring(0, separatorIndex).Trim();
+                        outputFilename = arg.Substring(separatorIndex + 1).Trim();
+                        if (outputFilename.Length <= 0)
+                        {
+                            Console.WriteLine("[ERROR] Output parameter provided but filename is missing, skipping file ouput.");
+                            outputFile = false;
+                        }
+                    }
+                }
+                else if (arg.Equals("/stdout"))
+                {
+                    outputStdout = true;
+                }
+            }
+            if (!fileProvided)
+            {
+                Console.WriteLine("[ERROR] Filename required!");
+                Console.WriteLine("Usage: DPAPIBlobReader /file:<filename> /stdout /outfile:<filename>");
+                return -1;                
+            }
         }
         else
         {
             Console.WriteLine("[ERROR] Filename required!");
-            Console.WriteLine("Usage: DPAPIBlobReader <filename>");
+            Console.WriteLine("Usage: DPAPIBlobReader /file:<filename> /stdout /outfile:<filename>");
             return -1;
         }
 
@@ -185,70 +241,95 @@ public static class DPAPIBlobReader
                     Console.WriteLine("[*] Blob Summary");
                     Console.WriteLine("[>] Filename: {0}", filename);
                     Console.Write("[>] File hash (SHA-256): ");
-                    PrintValues(fileHash, true);
+                    PrintValues(fileHash, true, true);
                     Console.WriteLine("[>] Blob start position: {0}.", blobStart);
                     Console.WriteLine("[>] Final blob pointer position: {0}", ptrBlob);
                     Console.WriteLine("[>] Remaining bytes: {0}", remainingBytes);
                     Console.WriteLine("[>] Blob Structure:");
                     Console.Write("dwVerion:\t\t\t");
-                    PrintValues(dwVersion, true);
+                    PrintValues(dwVersion, true, true);
                     Console.Write("guidProvider:\t\t\t");
-                    PrintValues(guidProvider, false);
+                    PrintValues(guidProvider, false, true);
                     Console.WriteLine(":({0})", dpapiGuid.ToString());
                     Console.Write("dwMasterKeyVersion:\t\t");
-                    PrintValues(dwMasterKeyVersion, true);
+                    PrintValues(dwMasterKeyVersion, true, true);
                     Console.Write("guidMasterKey:\t\t\t");
-                    PrintValues(guidMasterKey, false);
+                    PrintValues(guidMasterKey, false, true);
                     Console.WriteLine(":({0})", masterKeyGuid.ToString());
                     Console.Write("dwFlags:\t\t\t");
-                    PrintValues(dwFlags, true);
+                    PrintValues(dwFlags, true, true);
                     Console.Write("dwDescriptionLen:\t\t");
-                    PrintValues(dwDescriptionLen, false);
+                    PrintValues(dwDescriptionLen, false, true);
                     Console.WriteLine(":({0})", descriptionLength);
                     Console.Write("szDescription:\t\t\t");
                     if (EmptyArray(szDescription)) {     //  is the description array all zeroes?
-                        PrintValues(szDescription, true);       //  output as-is
+                        PrintValues(szDescription, true, true);       //  output as-is
                     }
                     else {
-                        PrintValues(szDescription, false);
+                        PrintValues(szDescription, false, true);
                         string reableDescription = System.Text.Encoding.UTF8.GetString(szDescription);
                         Console.WriteLine("({0})", reableDescription);
                     }
                     Console.Write("algCrypt:\t\t\t");
-                    PrintValues(algCrypt, true);
+                    PrintValues(algCrypt, true, true);
                     Console.Write("dwAlgCryptLen:\t\t\t");
-                    PrintValues(dwAlgCryptLen, false);
+                    PrintValues(dwAlgCryptLen, false, true);
                     Console.WriteLine(":({0})", algCryptLen);
                     Console.Write("dwSaltLen:\t\t\t");
-                    PrintValues(dwSaltLen, false);
+                    PrintValues(dwSaltLen, false, true);
                     Console.WriteLine(":({0})", saltLen);
                     Console.Write("pbSalt:\t\t\t\t");
-                    PrintValues(pbSalt, true);
+                    PrintValues(pbSalt, true, true);
                     Console.Write("dwHmacKeyLen:\t\t\t");
-                    PrintValues(dwHmacKeyLen, false);
+                    PrintValues(dwHmacKeyLen, false, true);
                     Console.WriteLine(":({0})", hmacKeyLen);
                     Console.Write("pbHmackKey:\t\t\t");
-                    PrintValues(pbHmackKey, true);
+                    PrintValues(pbHmackKey, true, true);
                     Console.Write("algHash:\t\t\t");
-                    PrintValues(algHash, true);
+                    PrintValues(algHash, true, true);
                     Console.Write("dwAlgHashLen:\t\t\t");
-                    PrintValues(dwAlgHashLen, false);
+                    PrintValues(dwAlgHashLen, false, true);
                     Console.WriteLine(":({0})", algHashLen);
                     Console.Write("dwHmac2KeyLen:\t\t\t");
-                    PrintValues(dwHmac2KeyLen, false);
+                    PrintValues(dwHmac2KeyLen, false, true);
                     Console.WriteLine(":({0})", hmac2KeyLen);
                     Console.Write("pbHmack2Key:\t\t\t");
-                    PrintValues(pbHmack2Key, true);
+                    PrintValues(pbHmack2Key, true, true);
                     Console.Write("dwDataLen:\t\t\t");
-                    PrintValues(dwDataLen, false);
+                    PrintValues(dwDataLen, false, true);
                     Console.WriteLine(":({0})", dataLen);
                     Console.Write("pbData:\t\t\t\t");
-                    PrintValues(pbData, true);
+                    PrintValues(pbData, true, true);
                     Console.Write("dwSignLen:\t\t\t");
-                    PrintValues(dwSignLen, false);
+                    PrintValues(dwSignLen, false, true);
                     Console.WriteLine(":({0})", signLen);
                     Console.Write("pbSign:\t\t\t\t");
-                    PrintValues(pbSign, true);
+                    PrintValues(pbSign, true, true);
+
+                    if (outputStdout) {
+                        Console.WriteLine("[*] Output to stdout enabled, dumping bytes:");
+                        Console.WriteLine("--------START--------");
+                        PrintValues(inputBytes, true, false);
+                        Console.WriteLine("---------EOF---------");                        
+                    }
+
+                    if (outputFile)
+                    {
+                        Console.WriteLine($"[*] Output to file enabled, dumping bytes to file: {outputFilename}");
+                        
+                        //  Remove decrypted output file
+                        if (File.Exists(outputFilename))
+                        {
+                            File.Delete(outputFilename);
+                        }     
+
+                        // Write the encrypted bytes to the encrypted output file
+                        using (FileStream outputFs = File.Create(outputFilename))
+                        {
+                            outputFs.Write(inputBytes, 0, inputBytes.Length);
+                            Console.WriteLine("[*] Output file written.");
+                        }
+                    }
 
                     Console.WriteLine("[*] Done.");
                 }
@@ -266,16 +347,18 @@ public static class DPAPIBlobReader
     }
 
     // Adapted from Microsoft's DPAPI examples
-    public static void PrintValues(Byte[] myArr, bool addNewline = false)
+    public static void PrintValues(Byte[] myArr, bool addNewline = false, bool hexOutput = false)
     {
-        Console.Write("0x");
-        foreach (Byte i in myArr)
-        {
-            //  added .ToString("X2") to format the byte values in hex
-            //Console.Write( "\t{0}", i );
-            //Console.Write("0x{0}", i.ToString("X2"));
-            Console.Write("{0}", i.ToString("x2"));     //  lowercase seems better for readability
+        if(hexOutput) {
+            Console.Write("0x");
         }
+        foreach (Byte i in myArr)
+            {
+                //  added .ToString("X2") to format the byte values in hex
+                //Console.Write( "\t{0}", i );
+                //Console.Write("0x{0}", i.ToString("X2"));
+                Console.Write("{0}", i.ToString("x2"));     //  lowercase seems better for readability
+            }
         if (addNewline)
             Console.WriteLine();
     }
