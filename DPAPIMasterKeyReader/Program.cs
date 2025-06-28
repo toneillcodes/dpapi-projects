@@ -495,7 +495,7 @@ public static class DPAPIMasterKeyReader
                             {
                                 Console.WriteLine("[*] Output to stdout enabled, dumping bytes:");
                                 Console.WriteLine("--------START--------");
-                                PrintValues(inputBytes, true, false);
+                                PrintValues(inputBytes, true, false, true);
                                 Console.WriteLine("---------EOF---------");
                             }
 
@@ -552,17 +552,21 @@ public static class DPAPIMasterKeyReader
     }
 
     // Adapted from Microsoft's DPAPI examples
-    public static void PrintValues(Byte[] myArr, bool addNewline = false, bool hexOutput = false)
+    public static void PrintValues(Byte[] myArr, bool addNewline = false, bool hexPrefix = false, bool hexDump = false)
     {
-        if(hexOutput) {
+        if(hexPrefix) {
             Console.Write("0x");
         }
         foreach (Byte i in myArr)
         {
-            //  added .ToString("X2") to format the byte values in hex
-            //Console.Write( "\t{0}", i );
-            //Console.Write("0x{0}", i.ToString("X2"));
-            Console.Write("{0}", i.ToString("x2"));     //  lowercase seems better for readability
+            if (hexDump)
+            {
+                Console.Write("\\x{0}", i.ToString("X2"));
+            }
+            else
+            {
+                Console.Write("{0}", i.ToString("x2"));     //  lowercase seems better for readability                
+            }
         }
         if (addNewline)
             Console.WriteLine();
