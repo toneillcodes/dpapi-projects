@@ -1,6 +1,6 @@
 # dpapi-projects
 This is a collection of research materials and offensive tools for the Windows DPAPI architecture.  
-None of this (so far) is new, but the goal is to deepen my own understanding and share whatever I can along the way.
+The goal is to deepen my own understanding and share whatever I can along the way.
 
 ## What is DPAPI?
 Data Protection Application Programming Interface is a set of APIs used to protect and unprotect secrets on a Windows system.  
