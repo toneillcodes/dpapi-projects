@@ -1,2 +1,0 @@
-# PowerDPAPI
-LOTL PowerShell
