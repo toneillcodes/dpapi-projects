@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory=$true)]
-    [string]$Output,
+    [string]$File,
     [Parameter(Mandatory=$false)]
     [string]$Format,    
     [Parameter(Mandatory=$false)]
@@ -28,11 +28,11 @@ try {
 if($credential) {
     if($Format -eq "xml") {
         # Export to XML
-        $protected | Export-CliXml -Path $Output
+        $protected | Export-CliXml -Path $File
     } else {
-        $protected | ConvertFrom-SecureString | Out-File -FilePath $Output
+        $protected | ConvertFrom-SecureString | Out-File -FilePath $File
     }
-    Write-Host "[*] DPAPI XML blob written to $Output."
+    Write-Host "[*] DPAPI XML blob written to $File."
 } else {
     Write-Error "[!] Credential value is empty, check inputs."
 }
