@@ -1,5 +1,3 @@
 # DPAPI PowerShell
-PowerShell to do DPAPI stuff
-
-
-PowerDPAPI.ps1: DPAPI credential hunter and blob parser.
+PowerShell to do DPAPI stuff  
+You may also be interested in the PowerDPAPI repository
