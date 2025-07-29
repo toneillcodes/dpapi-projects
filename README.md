@@ -19,4 +19,4 @@ Check out my posts on medium:
 - [DPAPIBlobReader](https://github.com/toneillcodes/dpapi-projects/tree/main/DPAPIBlobReader): C# project demonstrating the processing of a DPAPI protected blob
 - [DPAPIMasterKeyReader](https://github.com/toneillcodes/dpapi-projects/tree/main/DPAPIMasterKeyReader): C# project demonstrating the processing of a DPAPI master key file
 - [DPAPIPowerShell](https://github.com/toneillcodes/dpapi-projects/tree/main/DPAPIPowerShell): PowerShell snippets related to DPAPI
-- [PowerDPAPI](https://github.com/toneillcodes/dpapi-projects/tree/main/PowerDPAPI): PowerShell project to locate, parse and dump DPAPI credential blobs and the corresponding master key
+- [PowerDPAPI](https://github.com/toneillcodes/PowerDPAPI): PowerShell project to locate, parse and dump DPAPI credential blobs and the corresponding master key
